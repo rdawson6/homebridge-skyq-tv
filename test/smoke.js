@@ -75,6 +75,11 @@ function fakeBox() {
         const name = Object.keys(plugin._test.KEYS).find((k) => plugin._test.KEYS[k] === code);
         box.keys.push(name);
         if (name === 'power') box.standby = !box.standby;
+        if (name === 'channelup' || name === 'channeldown') {
+          const i = CHANNELS.findIndex((c) => c.sid === box.sid);
+          const n = (i + (name === 'channelup' ? 1 : CHANNELS.length - 1)) % CHANNELS.length;
+          box.sid = CHANNELS[n].sid;
+        }
         if (/^\d$/.test(name)) {
           box.digits += name;
           if (box.digits.length === 3) {
@@ -209,8 +214,12 @@ test('television: services, inputs and accessory information', async () => {
     assert.strictEqual(tv.info.getCharacteristic(C.Model).value, 'Sky Q');
     assert.strictEqual(tv.info.getCharacteristic(C.FirmwareRevision).value, '37.2.1');
     assert.strictEqual(tv.tv.getCharacteristic(C.Active).value, C.Active.INACTIVE);
-    // Information + Television + 3 inputs
-    assert.strictEqual(hap.services.length, 5);
+    // Information + Television + 3 inputs + 2 channel buttons
+    assert.strictEqual(hap.services.length, 7);
+    const buttons = hap.services.filter((s) => s.UUID === HAP.Service.Switch.UUID);
+    assert.deepStrictEqual(buttons.map((s) => s.subtype), ['channel-up', 'channel-down']);
+    assert.deepStrictEqual(buttons.map((s) => s.getCharacteristic(C.ConfiguredName).value),
+      ['Sky Q Channel Up', 'Sky Q Channel Down']);
   } finally { box.close(); }
 });
 
@@ -284,6 +293,54 @@ test('television: unreachable box shows as off and logs once', async () => {
   await waitFor(() => tv._reachable === false, 8000, 'unreachable');
   assert.strictEqual(tv.tv.getCharacteristic(C.Active).value, C.Active.INACTIVE);
   assert.strictEqual(logs.filter((l) => l.startsWith('WARN')).length, 1);
+});
+
+test('channel buttons: press key when on, reset, follow channel, ignore in standby', async () => {
+  const box = await fakeBox();
+  try {
+    box.standby = false;
+    box.sid = 3011;  // 101 BBC One, favourite 1
+    const tv = makeTv(box);
+    const hap = tv.accessory._associatedHAPAccessory;
+    const up   = hap.getServiceById(HAP.Service.Switch, 'channel-up').getCharacteristic(C.On);
+    const down = hap.getServiceById(HAP.Service.Switch, 'channel-down').getCharacteristic(C.On);
+    const input = tv.tv.getCharacteristic(C.ActiveIdentifier);
+    await waitFor(() => tv.on === true, 3000, 'on detected');
+
+    await up.handleSetRequest(true);
+    await waitFor(() => box.keys.length === 1, 3000, 'channelup key');
+    assert.deepStrictEqual(box.keys, ['channelup']);
+    assert.strictEqual(box.sid, 1209);  // 103 ITV
+    await waitFor(() => up.value === false, 2000, 'button reset');
+    await waitFor(() => input.value === 2, 5000, 'tile follows to ITV');
+
+    await down.handleSetRequest(true);
+    await waitFor(() => box.keys.length === 2, 3000, 'channeldown key');
+    assert.strictEqual(box.sid, 3011);
+    await waitFor(() => input.value === 1, 5000, 'tile follows to BBC One');
+
+    // Turning the switch "off" does nothing.
+    await up.handleSetRequest(false);
+    await sleep(300);
+    assert.strictEqual(box.keys.length, 2);
+
+    // In standby the press is ignored (no power or channel key sent).
+    box.standby = true;
+    tv._holdUntil = 0;
+    await up.handleSetRequest(true);
+    await sleep(800);
+    assert.deepStrictEqual(box.keys, ['channelup', 'channeldown']);
+    await waitFor(() => up.value === false, 2000, 'button reset in standby');
+  } finally { box.close(); }
+});
+
+test('channel buttons can be turned off in config', async () => {
+  const box = await fakeBox();
+  try {
+    const tv = makeTv(box, { channel_buttons: false });
+    const hap = tv.accessory._associatedHAPAccessory;
+    assert.strictEqual(hap.services.filter((s) => s.UUID === HAP.Service.Switch.UUID).length, 0);
+  } finally { box.close(); }
 });
 
 test('remote key mapping', async () => {

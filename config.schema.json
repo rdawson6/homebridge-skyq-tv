@@ -2,7 +2,7 @@
   "pluginAlias": "SkyQTV",
   "pluginType": "platform",
   "singular": true,
-  "headerDisplay": "Shows each Sky Q box as a HomeKit TV. The TV's power control switches the box between on and standby, favourite channels appear as inputs, and the Control Centre remote works. Each TV is published separately: after restarting Homebridge, add it in the Home app (Add Accessory, More Options) using the bridge PIN.",
+  "headerDisplay": "Shows each Sky Q box as a HomeKit TV. The TV's power control switches the box between on and standby, favourite channels appear as inputs, Channel Up and Down buttons are added, and the Control Centre remote works. Each TV is published separately: after restarting Homebridge, add it in the Home app (Add Accessory, More Options) using the bridge PIN.",
   "footerDisplay": "Each Sky Q box needs a static IP address.",
   "schema": {
     "type": "object",
@@ -55,6 +55,12 @@
                 }
               }
             },
+            "channel_buttons": {
+              "title": "Channel Up / Down Buttons",
+              "type": "boolean",
+              "default": true,
+              "description": "Add Channel Up and Channel Down buttons to the TV accessory. They do nothing while the box is in standby."
+            },
             "wake_delay": {
               "title": "Wake Delay (seconds)",
               "type": "integer",
@@ -100,6 +106,7 @@
             }
           ]
         },
+        "boxes[].channel_buttons",
         {
           "type": "section",
           "title": "Advanced",

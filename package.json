@@ -1,6 +1,6 @@
 {
   "name": "homebridge-skyq-tv",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "displayName": "Sky Q TV",
   "description": "Homebridge plugin that shows each Sky Q box as a HomeKit TV, with on/standby control, favourite channels as inputs and the Control Centre remote.",
   "main": "index.js",

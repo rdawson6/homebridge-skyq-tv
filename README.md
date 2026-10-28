@@ -6,6 +6,7 @@ A Homebridge plugin that shows each Sky Q box (main box or Sky Q Mini) as a TV i
 - **Favourite channels**: each favourite appears as an input on the TV tile. Selecting one wakes the box if needed and dials the channel.
 - **Current channel**: if the box is on a favourite channel, the tile shows it, even if the channel was changed with the Sky remote.
 - **Control Centre remote**: arrows, select, back, play/pause, info, rewind and fast forward.
+- **Channel Up / Down buttons**: two buttons inside the TV accessory. Each press changes channel once, then the button turns itself off. They do nothing while the box is in standby.
 
 It replaces the switches made by `homebridge-sky-q-no-logs`. That plugin can only press keys and cannot turn a box off from a channel switch.
 
@@ -43,6 +44,7 @@ It replaces the switches made by `homebridge-sky-q-no-logs`. That plugin can onl
 | `boxes[].name` | Yes | `Sky Q` | Name of the TV in Home |
 | `boxes[].ipAddress` | Yes | | Static IP address of the box |
 | `boxes[].favourites` | No | none | List of `{ name, channel }`. Channel is the 3 or 4 digit EPG number |
+| `boxes[].channel_buttons` | No | `true` | Add the Channel Up and Channel Down buttons |
 | `boxes[].wake_delay` | No | `20` | Seconds to wait after waking from standby before pressing Sky and Back and dialling the channel. `0` skips this |
 | `boxes[].poll_interval` | No | `10` | Seconds between power and channel checks (5 to 60) |
 
@@ -72,6 +74,7 @@ Power uses the `power` key, which toggles standby. The plugin reads the box's st
 npm install
 npm test                         # fake Sky Q box on localhost, presses no real keys
 node test/live.js 192.168.x.x    # real box: wakes it, changes channel, restores power state
+node test/live-buttons.js 192.168.x.x  # real box: tests Channel Up / Down (add --allow-on if the box is on)
 ```
 
 ## Credits

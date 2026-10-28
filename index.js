@@ -21,6 +21,8 @@ const KEYS = {
 const KEY_GAP_MS          = 500;    // pause between key presses (matches sky-remote)
 const SOAP_RETRY_MS       = 5 * 60 * 1000;
 const CHANNEL_RELOAD_MS   = 60 * 60 * 1000;
+const BUTTON_RESET_MS     = 500;    // channel buttons turn themselves off after this
+const CHANNEL_SYNC_DELAY_MS = 2500; // re-read the channel this long after a button press
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -326,8 +328,40 @@ class SkyQTelevision {
     }
     tv.updateCharacteristic(Characteristic.ActiveIdentifier, this.activeId);
 
+    if (config.channel_buttons !== false) {
+      this._addButton(Service, 'channel-up', this.name + ' Channel Up', 'channelup');
+      this._addButton(Service, 'channel-down', this.name + ' Channel Down', 'channeldown');
+    }
+
     this.log.info('[' + this.name + '] ' + this.ip + ' with ' + this.favourites.length + ' favourite channel(s)');
     setImmediate(() => this._poll());
+  }
+
+  /* A switch that acts as a push button: turning it on presses `key` once,
+     then it turns itself back off. Does nothing while the box is in standby. */
+  _addButton(Service, subtype, name, key) {
+    const C = this.Characteristic;
+    const button = this.accessory.addService(Service.Switch, name, subtype);
+    if (!button.testCharacteristic(C.ConfiguredName)) button.addOptionalCharacteristic(C.ConfiguredName);
+    button.setCharacteristic(C.ConfiguredName, name);
+    button.getCharacteristic(C.On)
+      .onGet(() => false)
+      .onSet((value) => {
+        if (!value) return;
+        setTimeout(() => button.updateCharacteristic(C.On, false), BUTTON_RESET_MS);
+        this._enqueue(() => this._pressWhenOn(key));
+      });
+    return button;
+  }
+
+  async _pressWhenOn(key) {
+    if (!(await this._isOn())) {
+      this.log.debug('[' + this.name + '] ' + key + ' ignored: box is in standby');
+      return;
+    }
+    await this.client.pressKeys([key]);
+    // Update the tile soon rather than waiting for the next poll.
+    setTimeout(() => this._syncChannel().catch(() => {}), CHANNEL_SYNC_DELAY_MS);
   }
 
   /* Run user actions one at a time so power + channel requests from the same
