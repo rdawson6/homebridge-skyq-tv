@@ -1,0 +1,116 @@
+{
+  "pluginAlias": "SkyQTV",
+  "pluginType": "platform",
+  "singular": true,
+  "headerDisplay": "Shows each Sky Q box as a HomeKit TV. The TV's power control switches the box between on and standby, favourite channels appear as inputs, and the Control Centre remote works. Each TV is published separately: after restarting Homebridge, add it in the Home app (Add Accessory, More Options) using the bridge PIN.",
+  "footerDisplay": "Each Sky Q box needs a static IP address.",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Platform Name",
+        "type": "string",
+        "default": "Sky Q TV"
+      },
+      "boxes": {
+        "title": "Sky Q Boxes",
+        "type": "array",
+        "items": {
+          "title": "Sky Q Box",
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "Name",
+              "type": "string",
+              "placeholder": "Sky Q",
+              "required": true
+            },
+            "ipAddress": {
+              "title": "IP Address",
+              "type": "string",
+              "format": "ipv4",
+              "placeholder": "192.168.1.x",
+              "required": true
+            },
+            "favourites": {
+              "title": "Favourite Channels",
+              "type": "array",
+              "items": {
+                "title": "Channel",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "title": "Name",
+                    "type": "string",
+                    "placeholder": "BBC One",
+                    "required": true
+                  },
+                  "channel": {
+                    "title": "Channel Number",
+                    "type": "string",
+                    "pattern": "^[0-9]{3,4}$",
+                    "placeholder": "101",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "wake_delay": {
+              "title": "Wake Delay (seconds)",
+              "type": "integer",
+              "default": 20,
+              "minimum": 0,
+              "maximum": 60,
+              "description": "After waking from standby, wait this long and then press Sky and Back so the box is showing live TV before a channel is dialled. Set to 0 to skip."
+            },
+            "poll_interval": {
+              "title": "Poll Interval (seconds)",
+              "type": "integer",
+              "default": 10,
+              "minimum": 5,
+              "maximum": 60,
+              "description": "How often to check the box's power state and current channel."
+            }
+          }
+        }
+      }
+    }
+  },
+  "layout": [
+    "name",
+    {
+      "key": "boxes",
+      "type": "array",
+      "buttonText": "Add Sky Q Box",
+      "items": [
+        "boxes[].name",
+        "boxes[].ipAddress",
+        {
+          "key": "boxes[].favourites",
+          "type": "array",
+          "buttonText": "Add Favourite",
+          "items": [
+            {
+              "type": "flex",
+              "flex-flow": "row wrap",
+              "items": [
+                "boxes[].favourites[].name",
+                "boxes[].favourites[].channel"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Advanced",
+          "expandable": true,
+          "expanded": false,
+          "items": [
+            "boxes[].wake_delay",
+            "boxes[].poll_interval"
+          ]
+        }
+      ]
+    }
+  ]
+}

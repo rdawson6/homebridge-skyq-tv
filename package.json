@@ -1,0 +1,53 @@
+{
+  "name": "homebridge-skyq-tv",
+  "version": "1.0.0",
+  "displayName": "Sky Q TV",
+  "description": "Homebridge plugin that shows each Sky Q box as a HomeKit TV, with on/standby control, favourite channels as inputs and the Control Centre remote.",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "config.schema.json",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node test/smoke.js"
+  },
+  "keywords": [
+    "homebridge-plugin",
+    "sky",
+    "skyq",
+    "sky q",
+    "sky q mini",
+    "television",
+    "tv"
+  ],
+  "author": {
+    "name": "Rich Dawson",
+    "url": "https://github.com/rdawson6"
+  },
+  "contributors": [
+    {
+      "name": "Kiro AI",
+      "url": "https://kiro.dev"
+    }
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/rdawson6/homebridge-skyq-tv#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rdawson6/homebridge-skyq-tv.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rdawson6/homebridge-skyq-tv/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "homebridge": "^1.6.0 || ^2.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "hap-nodejs": "^1.1.0"
+  }
+}
